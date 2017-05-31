@@ -11,8 +11,8 @@ if msg.media then
   if msg.media.type:match("contact") then
     add_contact(msg.media.phone, ""..(msg.media.first_name or "-").."", ""..(msg.media.last_name or "-").."", ok_cb, false)
   elseif msg.media.caption then
-    if msg.media.caption:match("(https://telegram.me/joinchat/%S+)") then
-      local link = {msg.media.caption:match("(https://telegram.me/joinchat/%S+)")}
+    if msg.media.caption:match("(https://telegram.me/joinchat/%S+)") or msg.media.caption:match("(https://t.me/joinchat/%S+)") then
+      local link = {msg.media.caption:match("(https://telegram.me/joinchat/%S+)") or msg.media.caption:match("(https://t.me/joinchat/%S+)")}
       if string.len(link[1]) == 51 then
         redis:sadd("selfbot:links",link[1])
         import_chat_link(parsed_url(link[1]),ok_cb,false)
@@ -133,7 +133,7 @@ function stats(cb_extra, success, result)
   for k,v in pairs(result) do
     i = i+1
   end
-  local text = "<b>👤Users </b>: <code>"..users2.."</code>\n<b>🗣Private Messages </b>: <code>"..pvmsgs.."</code>\n\n<b>👥Groups </b>: <code>"..gps2.."</code>\n<b>📩Groups Messages </b>: <code>"..gpmsgs.."</code>\n\n<b>👥SuperGroups </b>: <code>"..sgps2.."</code>\n<b>📬SuperGroup Messages </b>: <code>"..sgpmsgs.."</code>\n\n<b>🌐Total Saved Links </b>: <code>"..#links.."</code>\n<b>🚻Total Saved Contacts </b>: "..i
+  local text = "<b>👤Users </b> : <code>"..users2.."</code> \n<b>🗣Private Messages </b> : <code>"..pvmsgs.."</code> \n➖➖➖➖➖\n<b>👥Groups </b>: <code>"..gps2.."</code> \n<b>📩Groups Messages </b>: <code>"..gpmsgs.."</code> \n➖➖➖➖➖\n<b>👥SuperGroups </b>: <code>"..sgps2.."</code> \n<b>📬SuperGroup Messages </b>: <code>"..sgpmsgs.."</code> \n➖➖➖➖➖\n<b>🌐Total Saved Links </b>: <code>"..#links.."</code> \n<b>🚻Total Saved Contacts </b>: "..i
   send_large_msg(get_receiver(cb_extra.msg),text, ok_cb, false)
 end
 
@@ -232,8 +232,7 @@ function run(msg,matches)
   for i=1, #users do
     fwd_msg(users[i],id,ok_cb,false)
   end
-  text = "<b>Message Has Been Sent To </b>\n<b>Groups : Successfully</b>\n<b>SuperGroups : Successfully</b>\n<b>Contacts : Successfully</b>"
-  return text
+  return "<b>Message Has Been Sent To </b> \n<b>Groups : Successfully</b> \n<b>SuperGroups : Successfully</b> \n<b>Contacts : Successfully</b>"
   end
   if matches[1] == "lua" and is_sudo(msg) then
     return lua(matches[2])
@@ -241,19 +240,10 @@ function run(msg,matches)
   if matches[1] == "echo" and is_sudo(msg) then
     return matches[2]
   end
-  if msg.text:match("https://telegram.me/joinchat/%S+") then
+  if msg.text:match("https://telegram.me/joinchat/%S+") or msg.media.caption:match("(https://t.me/joinchat/%S+)") then
     if string.len(matches[1]) == 51 and not redis:sismember("selfbot:links",matches[1]) then
       redis:sadd("selfbot:links",matches[1])
       import_chat_link(parsed_url(matches[1]),ok_cb,false)
-    end
-  end
-  if msg.text:match("https://t.me/joinchat/%S+") then
-  local text = {msg.text:match("(https://t.me/joinchat/%S+)")}
-  local text = text:gsub("t.me","telegram.me")
-  local link = text
-  if string.len(link) == 51 and not redis:sismember("selfbot:links",link) then
-      redis:sadd("selfbot:links",link)
-import_chat_link(parsed_url(link),ok_cb,false)
     end
   end
 end
