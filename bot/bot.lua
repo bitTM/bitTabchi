@@ -230,10 +230,9 @@ function create_config( )
   config = {
     enabled_plugins = {
 	"botmanager",
-  "tabchi",
-  "chat",
-  "plugins",
-  "salam"
+        "tabchi",
+        "chat",
+        "salam"
     },
     sudo_users = {0},--Sudo users
   }
